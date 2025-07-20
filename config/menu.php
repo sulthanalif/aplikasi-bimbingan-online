@@ -29,6 +29,13 @@ return [
     ],
     [
         'type' => 'item',
+        'title' => 'Tema',
+        'icon' => 'fas.hashtag',
+        'link' => 'topics',
+        'can'  => 'manage-topics',
+    ],
+    [
+        'type' => 'item',
         'title' => 'Dosen',
         'icon' => 'fas.user',
         'link' => 'lecturers',
@@ -57,7 +64,7 @@ return [
         'type' => 'item',
         'title' => 'Pengajuan Judul',
         'icon' => 'fas.quote-left',
-        'link' => '#',
+        'link' => 'theses',
         'can'  => 'manage-theses',
     ],
     [

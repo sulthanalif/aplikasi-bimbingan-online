@@ -42,6 +42,10 @@ class DatabaseSeeder extends Seeder
             'create-lecturer',
             'edit-lecturer',
             'delete-lecturer',
+            'manage-topics',
+            'create-topic',
+            'edit-topic',
+            'delete-topic',
 
             'main-menu',
             'manage-theses',

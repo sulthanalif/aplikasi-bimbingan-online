@@ -23,6 +23,11 @@ Route::group(['middleware' => ['auth', 'userAccessLog']], function () {
         Volt::route('/departments', 'masters.departments.index')->middleware('can:manage-departments')->name('departments');
         Volt::route('/students', 'masters.students.index')->middleware('can:manage-students')->name('students');
         Volt::route('/lecturers', 'masters.lecturers.index')->middleware('can:manage-lecturers')->name('lecturers');
+        Volt::route('/topics', 'masters.topics.index')->middleware('can:manage-theses')->name('topics');
+    });
+
+    Route::prefix('menus')->group(function () {
+        Volt::route('/theses', 'menus.theses.index')->middleware('can:manage-theses')->name('theses');
     });
 
     Volt::route('/roles', 'settings.roles.index')->middleware('can:manage-roles')->name('roles');
