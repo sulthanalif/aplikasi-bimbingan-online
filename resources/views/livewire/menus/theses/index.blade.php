@@ -8,6 +8,7 @@ use Livewire\WithPagination;
 use App\Traits\CreateOrUpdate;
 use Livewire\Attributes\Title;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 new #[Title('Pengajuan Judul')] class extends Component {
@@ -15,6 +16,7 @@ new #[Title('Pengajuan Judul')] class extends Component {
 
     public string $search = '';
     public bool $modal = false;
+    public bool $modalDetail = false;
     public int $perPage = 10;
     public array $sortBy = ['column' => 'created_at', 'direction' => 'desc'];
 
@@ -24,7 +26,9 @@ new #[Title('Pengajuan Judul')] class extends Component {
     //var
     public ?int $topic_id = null;
     public string $title = '';
-    public string $student = '';
+    // public string $student = '';
+    // public string $topic = '';
+    public array $details = [];
     // public bool $status = true;/
 
 
@@ -51,6 +55,11 @@ new #[Title('Pengajuan Judul')] class extends Component {
             ->merge($selectedOption);
     }
 
+    public function detail(Thesis $thesis)
+    {
+        $this->redirect(route('thesis.detail', $thesis->id), navigate: true);
+    }
+
     public function save(): void
     {
         $this->setModel(new $this->pageModel);
@@ -71,9 +80,12 @@ new #[Title('Pengajuan Judul')] class extends Component {
     public function datas(): LengthAwarePaginator
     {
         return $this->pageModel->query()
-            ->with('student', 'topic')
+            ->with('student.user', 'topic')
             ->withAggregate('topic', 'name')
-            ->withAggregate('student', 'name')
+            // ->withAggregate('student', 'name')
+            ->when(auth()->user()->role == 'mahasiswa', function ($query) {
+                $query->where('student_id', auth()->user()->student?->id);
+            })
             ->where(function ($query) {
                 $query->where('title', 'like', "%{$this->search}%")
                     ->orWhereHas('topic', function ($query) {
@@ -87,10 +99,10 @@ new #[Title('Pengajuan Judul')] class extends Component {
     public function headers(): array
     {
         $headers = [
-            ['key' => 'title', 'label' => 'Judul', 'class' => 'w-64'],
+            ['key' => 'title', 'label' => 'Judul', 'class' => 'w-100'],
             ['key' => 'topic_name', 'label' => 'Tema', 'class' => 'w-64'],
             ['key' => 'status', 'label' => 'Status', 'class' => 'w-64'],
-            ['key' => 'created_at', 'label' => 'Dibuat pada', 'class' => 'w-64'],
+            ['key' => 'created_at', 'label' => 'Diajukan pada', 'class' => 'w-64'],
         ];
 
         if (auth()->user()->role != 'mahasiswa') {
@@ -122,13 +134,20 @@ new #[Title('Pengajuan Judul')] class extends Component {
             // $wire.status = true;
         });
 
-        $js('detail', (data) => {
-            $wire.modal = true;
-            $wire.recordId = data.id;
-            $wire.topic_id = data.topic.id;
-            $wire.title = data.title;
-            // $wire.status = data.status == 1;
-        });
+        // $js('detail', (data) => {
+        //     $wire.modalDetail = true;
+        //     $wire.recordId = data.id;
+        //     $wire.details = {
+        //         // nim: data.student.nim,
+        //         student: data.student.nim + ' - ' + data.student.user.name,
+        //         topic: data.topic.name,
+        //         title: data.title,
+        //     };
+        //     // $wire.student = data.student.user.name;
+        //     // $wire.topic = data.topic.name;
+        //     // $wire.title = data.title;
+        //     // $wire.status = data.status == 1;
+        // });
     </script>
 @endscript
 
@@ -148,8 +167,14 @@ new #[Title('Pengajuan Judul')] class extends Component {
     <!-- TABLE  -->
     <x-card class="mt-4" shadow>
         <x-table :headers="$headers" :rows="$datas" :sort-by="$sortBy" per-page="perPage" :per-page-values="[10, 25, 50, 100]"
-            with-pagination @row-click="$js.edit($event.detail)"
+            with-pagination @row-click="$wire.detail($event.detail.id)"
             show-empty-text empty-text="Tidak Ada Data!">
+            @scope('cell_student_name', $data)
+                {{ $data->student?->user->name }}
+            @endscope
+            @scope('cell_status', $data)
+                <x-status :status="$data->status" />
+            @endscope
             @scope('cell_created_at', $data)
                 <x-date-formatter :date="$data->created_at" format="d F Y" />
             @endscope
@@ -180,4 +205,30 @@ new #[Title('Pengajuan Judul')] class extends Component {
             </x-slot:actions>
         </x-form>
     </x-modal>
+
+    {{-- <x-modal wire:model="modalDetail" title="Detail Pengajuan Judul" box-class="w-full h-fit max-w-[600px]" without-trap-focus>
+        <div class="space-y-4" x-data="{detail: @entangle('details').live}">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="font-medium text-gray-700">Mahasiswa</label>
+                    <p class="mt-1" x-text="detail.student"></p>
+                </div>
+                <div>
+                    <label class="font-medium text-gray-700">Tema</label>
+                    <p class="mt-1" x-text="detail.topic"></p>
+                </div>
+            </div>
+            <div>
+                <label class="font-medium text-gray-700">Judul</label>
+                <p class="mt-1" x-text="detail.title"></p>
+            </div>
+        </div>
+
+        <x-slot:actions>
+            @can('action-thesis')
+                <x-button label="Reject" class="btn-error " @click="$wire.action('rejected')" spinner="action('rejected')" />
+                <x-button label="Approve" class="btn-primary" @click="$wire.action('approved')" spinner="action('approved')" />
+            @endcan
+        </x-slot:actions>
+    </x-modal> --}}
 </div>

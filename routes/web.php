@@ -28,6 +28,7 @@ Route::group(['middleware' => ['auth', 'userAccessLog']], function () {
 
     Route::prefix('menus')->group(function () {
         Volt::route('/theses', 'menus.theses.index')->middleware('can:manage-theses')->name('theses');
+        Volt::route('/theses/{thesis}', 'menus.theses.detail')->middleware('can:manage-theses')->name('thesis.detail');
     });
 
     Volt::route('/roles', 'settings.roles.index')->middleware('can:manage-roles')->name('roles');

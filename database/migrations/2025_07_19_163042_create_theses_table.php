@@ -19,8 +19,9 @@ return new class extends Migration
             $table->string('title');
             // $table->text('description');
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
-            $table->foreignId('action_by')->constrained('users')->onDelete('cascade');
+            $table->foreignId('action_by')->nullable()->constrained('users')->onDelete('cascade');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            // $table->string('note')->nullable();
             $table->timestamps();
         });
     }

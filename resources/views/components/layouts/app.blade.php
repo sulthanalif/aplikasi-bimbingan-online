@@ -7,6 +7,8 @@
     <title>{{ isset($title) ? $title.' - '.config('app.name') : config('app.name') }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @stack('styles')
 </head>
 <body class="min-h-screen font-sans antialiased bg-base-200">
 
@@ -24,7 +26,10 @@
 
         {{-- Right side actions --}}
         <x-slot:actions>
-            {{-- <x-button label="Messages" icon="o-envelope" link="###" class="btn-ghost btn-sm" responsive /> --}}
+            @if(config('switchuser.switch'))
+                <livewire:components.selectuser />
+            @endif
+
             <x-button label="Notifications" icon="o-bell" link="###" class="btn-ghost btn-sm" responsive />
             <x-dropdown>
                 <x-slot:trigger>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Thesis extends Model
@@ -17,6 +18,7 @@ class Thesis extends Model
         'title',
         'action_by',
         'status',
+        // 'note',
     ];
 
     protected static function boot()
@@ -45,5 +47,10 @@ class Thesis extends Model
     public function actionBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'action_by', 'id');
+    }
+
+    public function discussions(): HasMany
+    {
+        return $this->hasMany(ThesisDiscussion::class, 'thesis_id', 'id');
     }
 }
