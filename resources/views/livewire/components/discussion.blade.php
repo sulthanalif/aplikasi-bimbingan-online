@@ -45,14 +45,8 @@ new class extends Component {
 
     public function loadMore(): void
     {
-        // KIRIM SINYAL KE JS: "Akan mulai memuat..."
-        $this->dispatch('loading-more');
-
         $this->page++;
         $this->loadDiscussions();
-
-        // KIRIM SINYAL KE JS: "Sudah selesai memuat!"
-        $this->dispatch('more-loaded');
     }
 
     public function send(): void
@@ -78,6 +72,7 @@ new class extends Component {
             // 2. Langsung tambahkan pesan baru ke koleksi tanpa refresh
             // Ini akan memberikan pengalaman real-time yang lebih baik
             $this->loadDiscussions(); 
+            // $this->dispatch('discussion-added');
 
         } catch (\Exception $e) {
             $this->logError($e); // Hapus jika tidak ada method logError
@@ -130,60 +125,58 @@ new class extends Component {
            ]"/>
 
        <div class="flex justify-end">
-           <x-button label="Kirim" wire:click="send" responsive class="btn-primary" spinner="send" />
+           <x-button label="Kirim" wire:click="send" icon="fas.paper-plane" responsive class="btn-primary" spinner="send" />
        </div>
     </div>
 </div>
 
 @script
 <script>
-    document.addEventListener('livewire:initialized', () => {
+    const setupDiscussionComponent = () => {
         const container = document.getElementById('discussion-container');
+        const loadMoreButton = document.getElementById('load-more-button');
+
+        // Jika komponen tidak ada di halaman ini, hentikan fungsi.
+        if (!container) {
+            return;
+        }
 
         // Fungsi untuk scroll ke paling bawah
         const scrollToBottom = () => {
-            // Diberi sedikit jeda agar DOM sempat render
             setTimeout(() => {
                 container.scrollTop = container.scrollHeight;
             }, 50);
         };
 
-        // 1. Scroll ke bawah saat halaman pertama kali dimuat
+        // 1. Scroll ke bawah saat komponen dimuat
         scrollToBottom();
 
-        // 2. Jika Anda menggunakan metode .push() di PHP setelah mengirim pesan baru,
-        //    panggil event ini dari PHP untuk auto-scroll.
-        //    $this->dispatch('discussion-added');
-        Livewire.on('discussion-added', () => {
-            scrollToBottom();
-        });
+        // 2. Listener untuk auto-scroll setelah kirim pesan
+        // Pastikan Anda dispatch event ini dari method `send()` di PHP
+        // $this->dispatch('discussion-added');
+        Livewire.on('discussion-added', scrollToBottom);
 
-        // 3. Logika untuk menjaga posisi scroll saat "Load More"
-        const loadMoreButton = document.getElementById('load-more-button');
-
+        // 3. Logika untuk "Load More"
         if (loadMoreButton) {
             loadMoreButton.addEventListener('click', () => {
-                // Simpan tinggi dan posisi scroll SAAT INI, sebelum Livewire bekerja
                 const scrollHeightBefore = container.scrollHeight;
                 const scrollTopBefore = container.scrollTop;
 
-                // Buat "pengamat" yang akan menunggu perubahan pada kontainer
                 const observer = new MutationObserver(() => {
-                    // Setelah Livewire menambahkan elemen baru,
-                    // kembalikan posisi scroll ke tempatnya semula.
                     container.scrollTop = scrollTopBefore + (container.scrollHeight - scrollHeightBefore);
-
-                    // Hentikan pengamatan agar tidak berjalan terus-terusan
                     observer.disconnect();
                 });
 
-                // Mulai mengamati perubahan (penambahan anak elemen) pada kontainer
-                observer.observe(container, {
-                    childList: true,
-                });
+                observer.observe(container, { childList: true });
             });
         }
-    });
+    };
+
+    // Jalankan saat halaman pertama kali dimuat (full load)
+    document.addEventListener('livewire:initialized', setupDiscussionComponent);
+
+    // Jalankan setiap kali selesai navigasi via `wire:navigate`
+    document.addEventListener('livewire:navigated', setupDiscussionComponent);
 </script>
 @endscript
 

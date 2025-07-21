@@ -52,7 +52,6 @@ new class extends Component {
     placeholder="Pilih User..."
     search-function="searchUser"
     @change-selection="$wire.switchUser($event.detail.value)"
-    clearable
     single
     searchable >
     @scope('item', $user)
