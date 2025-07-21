@@ -15,6 +15,7 @@ Route::group(['middleware' => 'guest'], function () {
 Route::group(['middleware' => ['auth', 'userAccessLog']], function () {
     Route::get('/logout', LogoutController::class)->name('logout');
 
+    Volt::route('/notifications', 'notifications')->name('notifications');
     Volt::route('/dashboard', 'dashboard')->name('dashboard');
 
     Route::prefix('masters')->group( function () {

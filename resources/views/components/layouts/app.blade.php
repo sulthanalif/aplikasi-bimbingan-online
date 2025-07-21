@@ -32,7 +32,32 @@
                 <livewire:components.selectuser />
             @endif
 
-            <x-button label="Notifications" icon="o-bell" link="###" class="btn-ghost btn-sm" responsive />
+            <div
+                x-data="{
+                    notificationCount: {{ auth()->user()->unreadNotifications()->count() }},
+                    init() {
+                        window.Echo.private('App.Models.User.{{ auth()->id() }}')
+                            .listen('.new-notification', (e) => {
+                                this.notificationCount++;
+                                window.Livewire.dispatch('toast', {
+                                    type: 'info',
+                                    title: e.message,
+                                    position: 'toast-top-right'
+                                });
+                            });
+                    }
+                }"
+            >
+                <x-button icon="o-bell" link="{{ route('notifications') }}" class="btn-ghost btn-sm indicator" responsive>
+                    Notifications
+
+                    <template x-if="notificationCount > 0">
+                        <x-badge class="badge-error text-white badge-sm indicator-item">
+                            <span x-text="notificationCount"></span>
+                        </x-badge>
+                    </template>
+                </x-button>
+            </div>
             <x-dropdown>
                 <x-slot:trigger>
                     <x-button icon="fas.user" class="btn-circle" />

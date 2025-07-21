@@ -2,10 +2,13 @@
 
 use App\Models\Thesis;
 use Mary\Traits\Toast;
+use App\Models\Notification;
 use App\Traits\LogFormatter;
 use Livewire\Volt\Component;
+use App\Events\NewNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\NewDiscussionMessage;
 
 new class extends Component {
     use Toast, LogFormatter; // Trait CreateOrUpdate tidak digunakan, bisa dihapus
@@ -47,6 +50,8 @@ new class extends Component {
     {
         $this->page++;
         $this->loadDiscussions();
+
+        // dd($recipient, 'Mencoba mengirim notifikasi');
     }
 
     public function send(): void
@@ -64,6 +69,18 @@ new class extends Component {
                 'user_id' => auth()->id(), // Lebih singkat
                 'message' => $this->message,
             ]);
+
+            // --- LOGIKA NOTIFIKASI BARU ---
+            $currentUser = auth()->user();
+            $recipient = $this->thesis->student->user->id === $currentUser->id
+                ? $this->thesis->actionBy
+                : $this->thesis->student->user;
+
+            if ($recipient) {
+                // Baris ini akan otomatis menyimpan ke DB & melakukan broadcast
+                dd($recipient, 'Mencoba mengirim notifikasi');
+                $recipient->notify(new NewDiscussionMessage($this->thesis, $currentUser));
+            }
 
             DB::commit();
             $this->success('Berhasil Kirim Pesan', position: 'toast-bottom');
