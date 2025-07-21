@@ -35,7 +35,7 @@ new class extends Component {
             $thesis = $this->thesis;
             $thesis->action_by = auth()->user()->id;
             $thesis->status = $action;
-            $thesis->note = $this->note;
+            // $thesis->note = $this->note;
             $thesis->save();
 
             DB::commit();
@@ -108,15 +108,19 @@ new class extends Component {
                     {{-- <label class="font-medium text-gray-700">Judul</label> --}}
                     <p class="text-lg">{{ $thesis->title }}</p>
                 </div>
-                <div class="grid grid-cols-3 mt-4">
+                <div class="grid grid-cols-4 text-sm mt-4">
                     <div>
-                        <label class="font-medium text-gray-700">Diajukan Pada</label>
+                        <label class="font-medium text-gray-700">Diajukan pada</label>
                         <p class="mt-1"><x-date-formatter :date="$thesis->created_at" format="d F Y, H:i" /></p>
                     </div>
                     @if($thesis->action_by)
                     <div>
                         <label class="font-medium text-gray-700">Di{{ $thesis->status == 'approved' ? 'terima' : 'tolak' }} oleh</label>
                         <p class="mt-1">{{ $thesis->actionBy->name }}</p>
+                    </div>
+                    <div>
+                        <label class="font-medium text-gray-700">Di{{ $thesis->status == 'approved' ? 'terima' : 'tolak' }} pada</label>
+                        <p class="mt-1"><x-date-formatter :date="$thesis->updated_at" format="d F Y, H:i" /></p>
                     </div>
                     @endif
                     <div>

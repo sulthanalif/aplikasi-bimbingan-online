@@ -28,7 +28,7 @@ new #[Title('Pengajuan Judul')] class extends Component {
     public string $title = '';
     // public string $student = '';
     // public string $topic = '';
-    public array $details = [];
+    // public array $details = [];
     // public bool $status = true;/
 
 
@@ -60,8 +60,14 @@ new #[Title('Pengajuan Judul')] class extends Component {
         $this->redirect(route('thesis.detail', $thesis->id), navigate: true);
     }
 
-    public function save(): void
+    public function save()
     {
+        $notCloseThesisPending = Thesis::where('student_id', auth()->user()->student->id)->where('status', 'pending')->exists();
+        $notCloseThesisApprove = Thesis::where('student_id', auth()->user()->student->id)->where('status', 'approved')->exists();
+
+        if ($notCloseThesisPending) return $this->error('Kamu sudah memiliki pengajuan judul!', position: 'toast-bottom');
+        if ($notCloseThesisApprove) return $this->error('Kamu sudah memiliki judul yang disetujui!', position: 'toast-bottom');
+
         $this->setModel(new $this->pageModel);
 
         $this->saveOrUpdate(
@@ -131,23 +137,7 @@ new #[Title('Pengajuan Judul')] class extends Component {
             $wire.recordId = null;
             $wire.title = '';
             $wire.topic_id = null;
-            // $wire.status = true;
         });
-
-        // $js('detail', (data) => {
-        //     $wire.modalDetail = true;
-        //     $wire.recordId = data.id;
-        //     $wire.details = {
-        //         // nim: data.student.nim,
-        //         student: data.student.nim + ' - ' + data.student.user.name,
-        //         topic: data.topic.name,
-        //         title: data.title,
-        //     };
-        //     // $wire.student = data.student.user.name;
-        //     // $wire.topic = data.topic.name;
-        //     // $wire.title = data.title;
-        //     // $wire.status = data.status == 1;
-        // });
     </script>
 @endscript
 

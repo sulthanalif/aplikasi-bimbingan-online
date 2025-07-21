@@ -21,7 +21,9 @@
             </label>
 
             {{-- Brand --}}
-            <x-app-brand class="px-5" />
+            <div class="hidden sm:block">
+                <x-app-brand class="px-5" />
+            </div>
         </x-slot:brand>
 
         {{-- Right side actions --}}
@@ -60,8 +62,11 @@
         {{-- SIDEBAR --}}
         <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit">
 
-            {{-- BRAND --}}
+            <div class="lg:hidden mr-3 py-4">
+                <x-app-brand class="px-5" />
 
+                {{-- <x-menu-separator class="mb-0" /> --}}
+            </div>
             {{-- MENU --}}
             <x-menu activate-by-route>
 
