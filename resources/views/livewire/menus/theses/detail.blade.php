@@ -4,9 +4,10 @@ use App\Models\Thesis;
 use Mary\Traits\Toast;
 use Livewire\Volt\Component;
 use App\Traits\CreateOrUpdate;
+use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\DB;
 
-new class extends Component {
+new #[Title('Detail Pengajuan')] class extends Component {
     use Toast, CreateOrUpdate;
 
     public bool $modalAction = false;
@@ -75,10 +76,10 @@ new class extends Component {
             <x-button label="Kembali" @click="$wire.back" responsive class="btn-primary" icon="fas.arrow-left" spinner="back" />
         </x-slot:actions>
     </x-header>
-
+ 
     <div class="grid lg:grid-cols-2 gap-4">
         <x-card title="Mahasiswa">
-            <div>
+            <div class="text-sm">
                 <div class="grid grid-cols-2">
                     <label class="font-medium text-gray-700">NIM</label>
                     <p class="mt-1">{{ $thesis->student->nim }}</p>
