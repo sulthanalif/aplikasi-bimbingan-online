@@ -22,7 +22,7 @@
 
             {{-- Brand --}}
             <div class="hidden sm:block">
-                <x-app-brand class="px-5" />
+                <x-app-brand />
             </div>
         </x-slot:brand>
 

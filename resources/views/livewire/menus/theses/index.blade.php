@@ -88,7 +88,7 @@ new #[Title('Pengajuan Judul')] class extends Component {
         return $this->pageModel->query()
             ->with('student.user', 'topic')
             ->withAggregate('topic', 'name')
-            // ->withAggregate('student', 'name')
+            ->withAggregate('student', 'nim')
             ->when(auth()->user()->role == 'mahasiswa', function ($query) {
                 $query->where('student_id', auth()->user()->student?->id);
             })
@@ -113,7 +113,8 @@ new #[Title('Pengajuan Judul')] class extends Component {
 
         if (auth()->user()->role != 'mahasiswa') {
             $headers = array_merge([
-                ['key' => 'student_name', 'label' => 'Mahasiswa', 'class' => 'w-64'],
+                ['key' => 'student_nim', 'label' => 'Mahasiswa', 'class' => 'w-64'],
+                ['key' => 'student_name', 'label' => 'Mahasiswa', 'class' => 'w-64', 'sortable' => false],
             ], $headers);
         }
 
@@ -159,6 +160,16 @@ new #[Title('Pengajuan Judul')] class extends Component {
         <x-table :headers="$headers" :rows="$datas" :sort-by="$sortBy" per-page="perPage" :per-page-values="[10, 25, 50, 100]"
             with-pagination @row-click="$wire.detail($event.detail.id)"
             show-empty-text empty-text="Tidak Ada Data!">
+            @scope('cell_title', $data)
+            <x-popover position="right-start" offset="20">
+                <x-slot:trigger>
+                {{ Str::limit($data->title, 20) }}
+                </x-slot:trigger>
+                <x-slot:content class="!w-60 text-sm">
+                    {{ $data->title }}
+                </x-slot:content>
+            </x-popover>
+            @endscope
             @scope('cell_student_name', $data)
                 {{ $data->student?->user->name }}
             @endscope
