@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Models\Thesis;
 use Mary\Traits\Toast;
 use App\Models\Notification;
@@ -73,23 +74,25 @@ new class extends Component {
             // --- LOGIKA NOTIFIKASI BARU ---
             $currentUser = auth()->user();
             $recipient = $this->thesis->student->user->id === $currentUser->id
-                ? $this->thesis->actionBy
+                ? ($this->thesis->actionBy ?? User::whereHas('roles', function ($query){
+                    $query->where('name', 'prodi');
+                }))->first()
                 : $this->thesis->student->user;
 
             if ($recipient) {
                 // Baris ini akan otomatis menyimpan ke DB & melakukan broadcast
-                dd($recipient, 'Mencoba mengirim notifikasi');
+
                 $recipient->notify(new NewDiscussionMessage($this->thesis, $currentUser));
             }
 
             DB::commit();
-            $this->success('Berhasil Kirim Pesan', position: 'toast-bottom');
+            // $this->success('Berhasil Kirim Pesan', position: 'toast-bottom');
             $this->reset('message');
 
             // 2. Langsung tambahkan pesan baru ke koleksi tanpa refresh
             // Ini akan memberikan pengalaman real-time yang lebih baik
-            $this->loadDiscussions(); 
-            // $this->dispatch('discussion-added');
+            $this->loadDiscussions();
+            $this->dispatch('discussion-added');
 
         } catch (\Exception $e) {
             $this->logError($e); // Hapus jika tidak ada method logError
@@ -99,13 +102,38 @@ new class extends Component {
     }
 }; ?>
 
-<div class="space-y-4">
+<div class="space-y-4" x-data="{
+    init() {
+
+        window.Echo.private('App.Models.User.{{ auth()->id() }}')
+            .listen('.new-notification', (e) => {
+                @this.loadDiscussions();
+            });
+    }
+}">
     <div id="discussion-container" class="bg-white rounded-lg p-4 h-96 overflow-y-auto space-y-4 w-full">
-        @if($hasMorePages)
-            <div class="flex justify-center">
-                <x-button id="load-more-button" label="Load More" wire:click="loadMore" spinner="loadMore" class="btn-primary btn-sm" />
+            <div class="flex justify-center" x-data="{ show: false }" x-effect="show = $wire.hasMorePages" x-cloak>
+                <button
+                    x-show="show"
+                    id="load-more-button"
+                    wire:click="loadMore"
+                    wire:loading.attr="disabled"
+                    wire:target="loadMore"
+                    class="bg-primary px-5 py-1 rounded-lg text-white  flex items-center gap-2"
+                >
+                    <p wire:loading.remove wire:target="loadMore">Load More</p>
+                    <span wire:loading wire:target="loadMore">
+                        <div class="flex items-center gap-2">
+                            Loading...
+                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        </div>
+                    </span>
+                </button>
             </div>
-        @endif
+
 
         @forelse($discussions as $discussion)
             <div class="flex {{ $discussion->user_id === auth()->id() ? 'justify-end' : 'justify-start' }}">
@@ -155,6 +183,7 @@ new class extends Component {
 
         // Jika komponen tidak ada di halaman ini, hentikan fungsi.
         if (!container) {
+            // console.log('Discussion container not found');
             return;
         }
 
@@ -162,7 +191,7 @@ new class extends Component {
         const scrollToBottom = () => {
             setTimeout(() => {
                 container.scrollTop = container.scrollHeight;
-            }, 50);
+            }, 100); // Increased timeout for better reliability
         };
 
         // 1. Scroll ke bawah saat komponen dimuat
@@ -171,28 +200,62 @@ new class extends Component {
         // 2. Listener untuk auto-scroll setelah kirim pesan
         // Pastikan Anda dispatch event ini dari method `send()` di PHP
         // $this->dispatch('discussion-added');
-        Livewire.on('discussion-added', scrollToBottom);
+        Livewire.on('discussion-added', () => {
+            // Add small delay to ensure content is fully loaded
+            setTimeout(scrollToBottom, 50);
+        });
 
         // 3. Logika untuk "Load More"
+        // console.log('Load more button exists:', !!loadMoreButton);
+
         if (loadMoreButton) {
+            let observer;
+            // console.log('Setting up load more button listener');
+
             loadMoreButton.addEventListener('click', () => {
+                // console.log('Load more button clicked');
                 const scrollHeightBefore = container.scrollHeight;
                 const scrollTopBefore = container.scrollTop;
 
-                const observer = new MutationObserver(() => {
-                    container.scrollTop = scrollTopBefore + (container.scrollHeight - scrollHeightBefore);
+                // console.log('Before loading more:');
+                // console.log('- scrollHeight:', scrollHeightBefore);
+                // console.log('- scrollTop:', scrollTopBefore);
+
+                // Disconnect previous observer if exists
+                if (observer) {
+                    observer.disconnect();
+                }
+
+                observer = new MutationObserver(() => {
+                    // console.log('Mutation observer triggered');
+                    const newScrollHeight = container.scrollHeight;
+                    const heightDifference = newScrollHeight - scrollHeightBefore;
+                    const newScrollTop = scrollTopBefore + heightDifference;
+
+                    // console.log('After content loaded:');
+                    // console.log('- new scrollHeight:', newScrollHeight);
+                    // console.log('- height difference:', heightDifference);
+                    // console.log('- calculated scrollTop:', newScrollTop);
+
+                    container.scrollTop = newScrollTop;
+
+                    // console.log('Final scrollTop set to:', container.scrollTop);
+
+                    // Disconnect after first execution
                     observer.disconnect();
                 });
 
-                observer.observe(container, { childList: true });
+                observer.observe(container, {
+                    childList: true,
+                    subtree: true
+                });
+                // console.log('Observer setup complete');
             });
         }
     };
 
-    // Jalankan saat halaman pertama kali dimuat (full load)
+    // Initialize on both full page load and wire navigation
     document.addEventListener('livewire:initialized', setupDiscussionComponent);
-
-    // Jalankan setiap kali selesai navigasi via `wire:navigate`
     document.addEventListener('livewire:navigated', setupDiscussionComponent);
 </script>
 @endscript

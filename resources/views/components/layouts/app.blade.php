@@ -9,6 +9,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @stack('styles')
+    {{-- @livewireStyles --}}
 </head>
 <body class="min-h-screen font-sans antialiased bg-base-200">
 
@@ -32,32 +33,7 @@
                 <livewire:components.selectuser />
             @endif
 
-            <div
-                x-data="{
-                    notificationCount: {{ auth()->user()->unreadNotifications()->count() }},
-                    init() {
-                        window.Echo.private('App.Models.User.{{ auth()->id() }}')
-                            .listen('.new-notification', (e) => {
-                                this.notificationCount++;
-                                window.Livewire.dispatch('toast', {
-                                    type: 'info',
-                                    title: e.message,
-                                    position: 'toast-top-right'
-                                });
-                            });
-                    }
-                }"
-            >
-                <x-button icon="o-bell" link="{{ route('notifications') }}" class="btn-ghost btn-sm indicator" responsive>
-                    Notifications
-
-                    <template x-if="notificationCount > 0">
-                        <x-badge class="badge-error text-white badge-sm indicator-item">
-                            <span x-text="notificationCount"></span>
-                        </x-badge>
-                    </template>
-                </x-button>
-            </div>
+            <livewire:components.toast-notification />
             <x-dropdown>
                 <x-slot:trigger>
                     <x-button icon="fas.user" class="btn-circle" />
@@ -120,5 +96,6 @@
 
     {{--  TOAST area --}}
     <x-toast />
+    {{-- @livewireScripts --}}
 </body>
 </html>
