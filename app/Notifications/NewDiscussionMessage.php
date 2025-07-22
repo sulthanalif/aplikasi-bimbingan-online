@@ -41,7 +41,7 @@ class NewDiscussionMessage extends Notification implements ShouldBroadcast
     {
         return [
             'message' => "Pesan baru dari {$this->sender->name} di diskusi skripsi Anda.",
-            'url' => route('thesis.detail', $this->thesis->id), // Sesuaikan dengan route Anda
+            'url' => route('thesis.detail', $this->thesis->id),
             'sender_id' => $this->sender->id
         ];
     }
@@ -53,7 +53,7 @@ class NewDiscussionMessage extends Notification implements ShouldBroadcast
     {
         return new BroadcastMessage([
             'message' => "Pesan baru dari {$this->sender->name} di diskusi skripsi Anda.",
-            'url' => "route('thesis.detail', $this->thesis->id)",
+            'url' => route('thesis.detail', $this->thesis->id),
         ]);
     }
 

@@ -104,12 +104,13 @@ new class extends Component {
 
 <div class="space-y-4" x-data="{
     init() {
+        window.Echo.leave('App.Models.User.{{ auth()->id() }}');
 
         window.Echo.private('App.Models.User.{{ auth()->id() }}')
             .listen('.new-notification', (e) => {
                 @this.loadDiscussions();
             });
-    }
+    },
 }">
     <div id="discussion-container" class="bg-white rounded-lg p-4 h-96 overflow-y-auto space-y-4 w-full">
             <div class="flex justify-center" x-data="{ show: false }" x-effect="show = $wire.hasMorePages" x-cloak>
